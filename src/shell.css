@@ -1,0 +1,75 @@
+/* Official Web 0.1.7-rc.2: preserve native slot ownership, navigation and session state.
+   Suffix selectors are scoped to the native sidebar seat and this plugin's lifetime marker. */
+body[data-workbench-shell] [data-slot="sidebar"] > [class*="_root"] {
+ position:relative; display:grid; grid-template-columns:56px minmax(0,1fr);
+ grid-template-rows:64px auto minmax(0,1fr) auto; padding:0; width:100%;
+ background:var(--dsw-specific-sidebar-fill); --dsh-sidebar-inline-padding:0px;
+}
+body[data-workbench-shell] [data-slot="sidebar"] > [class*="_root"]::before {
+ content:""; position:absolute; left:55px; top:0; bottom:0; width:1px;
+ background:var(--dsw-alias-border-l3); pointer-events:none;
+}
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_logoRow"] {
+ grid-column:1 / -1; grid-row:1; height:64px; padding:0 10px; margin:0;
+ opacity:1; transition:none; overflow:visible;
+}
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_brandIdentity"] { gap:24px; }
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_brandMark"] { width:36px; justify-content:center; }
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_brandName"] { font-size:15px; font-weight:600; letter-spacing:0; }
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_panelList"] {
+ grid-column:1; grid-row:2 / 4; align-self:start; width:56px; margin:0; padding:4px 8px;
+ box-sizing:border-box; gap:10px; opacity:1; animation:none; transition:none;
+}
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_panelRow"] {
+ width:40px; min-height:40px; margin:0; padding:10px; gap:0; justify-content:center; border-radius:12px;
+}
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_panelGlyph"] svg { width:20px; height:20px; }
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_panelTitle"] { display:none; }
+body[data-workbench-shell] [data-slot="sidebar"] button[class*="_newSession"] {
+ grid-column:2; grid-row:2; width:calc(100% - 24px); height:36px; min-height:36px;
+ margin:0 12px 12px; border-radius:10px; padding:0 10px; flex:none;
+}
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_regionArea"] {
+ grid-column:2; grid-row:3 / 5; min-width:0; min-height:0; padding:0 8px 8px; margin:0;
+ box-sizing:border-box; overflow:hidden;
+}
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_footArea"] {
+ grid-column:1; grid-row:4; align-self:end; width:56px; box-sizing:border-box;
+ padding:10px 8px; margin:0; opacity:1; transition:none; animation:none;
+}
+body[data-workbench-shell] [data-slot="sidebar.settings"] [class*="_triggerLabel"] { display:none; }
+body[data-workbench-shell] [data-slot="sidebar.settings"] button[class*="_trigger"] {
+ width:40px; min-width:40px; height:40px; padding:0; gap:0; justify-content:center; border-radius:12px;
+}
+/* Hide the entire conversation region immediately, including its compact icons and tab stops. */
+body[data-workbench-shell] [data-sidebar-collapsed] [data-slot="sidebar"] button[class*="_newSession"],
+body[data-workbench-shell] [data-sidebar-collapsed] [data-slot="sidebar"] [class*="_regionArea"],
+body[data-workbench-shell] [data-sidebar-collapsed] [data-slot="sidebar"] [class*="_brand"] { display:none; }
+body[data-workbench-shell] [data-sidebar-collapsed] [data-slot="sidebar"] [class*="_logoRow"] {
+ grid-column:1; width:56px; height:64px; padding:0 10px; align-items:center;
+}
+body[data-workbench-shell] [data-sidebar-collapsed] [data-slot="sidebar"] [class*="_railMark"] { display:flex; }
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_toggle"] { width:36px; height:36px; flex:none; }
+@media (prefers-reduced-motion:reduce) {
+ body[data-workbench-shell] [data-slot="sidebar"] * { animation-duration:0s!important; transition-duration:0s!important; }
+}
+/* The rail entry is navigation; only the conversation header owns collapse. */
+body[data-workbench-shell] [data-slot="sidebar"] [class*="_logoRow"] { visibility:hidden; }
+body[data-workbench-shell] .wbConversationEntry {
+ position:absolute; top:12px; left:8px; width:40px; height:40px; display:grid; place-items:center;
+ border:0; border-radius:12px; padding:0; background:transparent; color:var(--dsw-alias-label-primary); cursor:pointer;
+}
+body[data-workbench-shell] .wbConversationEntry:hover,
+body[data-workbench-shell] .wbConversationEntry[aria-current="page"] { background:var(--dsw-alias-interactive-bg-hover); }
+body[data-workbench-shell] .wbConversationHeading { position:absolute; top:22px; left:72px; font-size:15px; font-weight:600; pointer-events:none; }
+body[data-workbench-shell] .wbConversationToggle {
+ width:28px; height:28px; margin-inline-end:8px; border:0; border-radius:8px; padding:0;
+ display:grid; place-items:center; background:transparent; color:var(--dsw-alias-label-secondary); cursor:pointer;
+}
+body[data-workbench-shell] .wbConversationToggle:hover { background:var(--dsw-alias-interactive-bg-hover); color:var(--dsw-alias-label-primary); }
+body[data-workbench-shell] :is(.wbConversationEntry,.wbConversationToggle):focus-visible { outline:2px solid var(--dsw-alias-link); outline-offset:2px; }
+body[data-workbench-shell] [data-conversation-header-leading] { margin-inline-start:-8px; }
+body[data-workbench-page="app"] [data-workbench-frame] { grid-template-columns:var(--workbench-app-columns)!important; }
+body[data-workbench-page="app"] [data-slot="sidebar"] > [class*="_root"] { width:56px!important; grid-template-columns:56px 0px; }
+body[data-workbench-page="app"] [data-slot="sidebar"] :is(button[class*="_newSession"],[class*="_regionArea"]),
+body[data-workbench-page="app"] [data-workbench-frame] > [data-side="sidebar"] { display:none; }

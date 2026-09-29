@@ -1,0 +1,41 @@
+{
+  "name": "dsh-workbench-shell",
+  "version": "1.8.3",
+  "description": "Plugin navigation and separate collapsible conversation sidebar for official DeepSeek Harness",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./client": "./dist/client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "dist",
+    "locale",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh": "0.1.7-rc.2"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node --check src/client.mjs && node --check src/index.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}
