@@ -4,18 +4,18 @@ import vm from 'node:vm'
 import {readFileSync} from 'node:fs'
 
 function harness() {
- const attributes=new Map(), styles=new Map(), callbacks=new Set(), registrations=new Map(), cleanups=[]
+ const attributes=new Map(), styles=new Map(), callbacks=new Set(), registrations=new Map(), cleanups=[],eventListeners=new Set()
  const frameAttrs=new Map()
  const frame={style:{gridTemplateColumns:'337px minmax(320px, 1fr) minmax(0px, 410px)',getPropertyValue:k=>styles.get(k)||'',setProperty:(k,v)=>styles.set(k,v),removeProperty:k=>styles.delete(k)},hasAttribute:k=>frameAttrs.has(k),setAttribute:(k,v)=>frameAttrs.set(k,v),removeAttribute:k=>frameAttrs.delete(k)}
  let observer,plugin,selected={activePanelId:null},toggles=0
- const body={dataset:new Proxy({}, {get:(_,k)=>attributes.get(k),set:(_,k,v)=>{attributes.set(k,v);return true}}),setAttribute:(k,v)=>attributes.set(k,v),removeAttribute:k=>attributes.delete(k)}
- const document={documentElement:{dataset:{},hasAttribute:()=>false},body,head:{append:()=>{}},createElement:()=>({setAttribute(){},remove(){}}),querySelector:()=>({closest:()=>frame}),querySelectorAll:()=>[]}
+ const body={append(){},dataset:new Proxy({}, {get:(_,k)=>attributes.get(k),set:(_,k,v)=>{attributes.set(k,v);return true}}),getAttribute:k=>attributes.get(k)??null,setAttribute:(k,v)=>attributes.set(k,v),removeAttribute:k=>attributes.delete(k)}
+ const document={addEventListener:(_name,fn)=>eventListeners.add(fn),removeEventListener:(_name,fn)=>eventListeners.delete(fn),createElementNS:()=>({style:{},setAttribute(){},append(){},remove(){}}),documentElement:{dataset:{},hasAttribute:()=>false},body,head:{append:()=>{}},createElement:()=>({setAttribute(){},remove(){}}),querySelector:()=>({closest:()=>frame}),querySelectorAll:()=>[]}
  const react={createElement:(type,props,...children)=>({type,props,children}),Fragment:'fragment',useSyncExternalStore:(_,get)=>get()}
- const sandbox={document,MutationObserver:class{constructor(fn){observer=fn}observe(){}disconnect(){observer=null}},window:{__ModuleLoader__:{load:entry=>{plugin=entry.factory(id=>id==='react'?react:{FishLogo:'fish',IconPanelLeftOutlineRegular:'panel',Tooltip:'tooltip'})}}}}
+ const sandbox={document,MutationObserver:class{constructor(fn){observer=fn}observe(){}disconnect(){observer=null}},window:{matchMedia:()=>({matches:false,addEventListener(){},removeEventListener(){}}),__ModuleLoader__:{load:entry=>{plugin=entry.factory(id=>id==='react'?react:{FishLogo:'fish',IconPanelLeftOutlineRegular:'panel',Tooltip:'tooltip'})}}}}
  vm.runInNewContext(readFileSync('dist/client.js','utf8'),sandbox)
- const ctx={effect:fn=>{const cleanup=fn();if(cleanup)cleanups.push(cleanup)},locale:{register:()=>()=>{},bind:()=>key=>key},layout:{panelInfo:{getSnapshot:()=>selected,subscribe:fn=>{callbacks.add(fn);return()=>callbacks.delete(fn)}},selectPanel:id=>{selected={activePanelId:id};for(const fn of callbacks)fn()},toggleSidebar:()=>toggles++},slots:{inject:(_,fn)=>fn(),register:(options,component)=>{registrations.set(options.name,component)}}}
+ const ctx={configForms:{get:()=>({getSnapshot:()=>({mode:'memory'}),subscribe:()=>()=>{}})},effect:fn=>{const cleanup=fn();if(cleanup)cleanups.push(cleanup)},locale:{register:()=>()=>{},bind:()=>key=>key},layout:{panelInfo:{getSnapshot:()=>selected,subscribe:fn=>{callbacks.add(fn);return()=>callbacks.delete(fn)}},selectPanel:id=>{selected={activePanelId:id};for(const fn of callbacks)fn()},toggleSidebar:()=>toggles++},slots:{inject:(_,fn)=>fn(),register:(options,component)=>{registrations.set(options.name,component)}}}
  plugin.apply(ctx)
- return {frame,styles,attributes,registrations,ctx,get toggles(){return toggles},get observers(){return observer},callbacks,dispose:()=>{for(const fn of cleanups.reverse())fn()}}
+ return {frame,styles,attributes,registrations,ctx,eventListeners,get toggles(){return toggles},get observers(){return observer},callbacks,dispose:()=>{for(const fn of cleanups.reverse())fn()}}
 }
 
 test('plugin routing removes only sidebar track without resetting native widths',()=>{
@@ -32,9 +32,9 @@ test('right-panel geometry refresh keeps the original sidebar preference',()=>{
  assert.equal(h.styles.get('--workbench-app-columns'),'56px minmax(0px, 1fr) minmax(0px, 0px)')
  h.dispose()
 })
-test('whale returns to conversation while header button alone toggles its list',()=>{
+test('brand entry returns to conversation while header button alone toggles its list',()=>{
  const h=harness();h.ctx.layout.selectPanel('plugins')
- const rail=h.registrations.get('shell.overlay')()
+ const rail=h.registrations.get('shell.overlay')({renderSlot:(_name,_owner,options)=>options.fallback})
  rail.children[0].children[0].props.onClick()
  assert.equal(h.ctx.layout.panelInfo.getSnapshot().activePanelId,null);assert.equal(h.toggles,0)
  h.registrations.get('conversation.header.leading')().children[0].props.onClick();assert.equal(h.toggles,1)
@@ -42,8 +42,15 @@ test('whale returns to conversation while header button alone toggles its list',
 })
 test('unload releases observers, subscription, presentation markers and projection',()=>{
  const h=harness();h.ctx.layout.selectPanel('plugins');h.dispose()
- assert.equal(h.callbacks.size,0);assert.equal(h.observers,null);assert.equal(h.styles.size,0)
+ assert.equal(h.callbacks.size,0);assert.equal(h.observers,null);assert.equal(h.styles.size,0);assert.equal(h.eventListeners.size,0)
  assert.equal(h.frame.hasAttribute('data-workbench-frame'),false)
  assert.equal(h.attributes.has('data-workbench-shell'),false)
  assert.equal(h.frame.style.gridTemplateColumns,'337px minmax(320px, 1fr) minmax(0px, 410px)')
+})
+test('navigation works without theme and renders the native optional-brand fallback',()=>{
+ const h=harness(),calls=[]
+ const rail=h.registrations.get('shell.overlay')({renderSlot:(name,owner,options)=>{calls.push({name,owner});return options.fallback}})
+ assert.equal(calls[0].name,'workbench.brand.mark');assert.equal(calls[0].owner.size,30)
+ assert.equal(rail.children[0].children[0].children[0].type,'fish')
+ assert.equal(h.attributes.has('data-dsh-theme'),false);h.dispose()
 })
