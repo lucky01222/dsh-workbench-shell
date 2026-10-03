@@ -19,7 +19,7 @@ export function apply(ctx) {
   const t = ctx.locale.bind('workbenchShell')
 
   ctx.effect(() => {
-    document.body.setAttribute('data-workbench-shell', '1.8.3')
+    document.body.setAttribute('data-workbench-shell', '1.11.1')
     const frames = new Set(), titles = new Map()
     const sync = () => {
       const app = ctx.layout.panelInfo.getSnapshot().activePanelId !== null
@@ -59,12 +59,12 @@ export function apply(ctx) {
     }
   })
 
-  function ConversationEntry() {
+  function ConversationEntry({ renderSlot }) {
     const { activePanelId } = useSyncExternalStore(ctx.layout.panelInfo.subscribe, ctx.layout.panelInfo.getSnapshot)
     const closed = useSyncExternalStore(sidebarState.subscribe, sidebarState.getSnapshot)
     return h(Fragment, null,
       h(Tooltip, { label: t('conversations'), side: 'right' },
-        h('button', { className: 'wbConversationEntry', type: 'button', 'aria-label': t('conversations'), 'aria-current': activePanelId === null ? 'page' : undefined, onClick: () => ctx.layout.selectPanel(null) }, h(FishLogo, { size: 24 }))),
+        h('button', { className: 'wbConversationEntry', type: 'button', 'aria-label': t('conversations'), 'aria-current': activePanelId === null ? 'page' : undefined, onClick: () => ctx.layout.selectPanel(null) }, renderSlot('workbench.brand.mark', { size: 30 }, { fallback: h(FishLogo, { size: 30 }) }))),
       activePanelId === null && !closed ? h('span', { className: 'wbConversationHeading' }, t('conversations')) : null,
     )
   }
@@ -76,6 +76,6 @@ export function apply(ctx) {
       'aria-expanded': !closed, onClick: () => ctx.layout.toggleSidebar(),
     }, h(IconPanelLeftOutlineRegular, { size: 16 })))
   }
-  ctx.slots.inject('shell.overlay', () => ctx.slots.register({ name: 'shell.overlay', id: 'workbench.conversation-entry' }, ConversationEntry))
-  ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({ name: 'conversation.header.leading', priority: -100 }, ConversationToggle))
+  ctx.slots.inject('shell.overlay', () => ctx.slots.register({ name: 'shell.overlay', id: 'workbench.conversation-entry', locale: 'workbenchShell', children: { 'workbench.brand.mark': { kind: 'single', scope: 'root' } } }, ConversationEntry))
+  ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({ name: 'conversation.header.leading', priority: -100, locale: 'workbenchShell' }, ConversationToggle))
 }
