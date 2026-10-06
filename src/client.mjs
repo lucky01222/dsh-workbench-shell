@@ -19,7 +19,7 @@ export function apply(ctx) {
   const t = ctx.locale.bind('workbenchShell')
 
   ctx.effect(() => {
-    document.body.setAttribute('data-workbench-shell', '1.11.1')
+    document.body.setAttribute('data-workbench-shell', '1.11.2')
     const frames = new Set(), titles = new Map()
     const sync = () => {
       const app = ctx.layout.panelInfo.getSnapshot().activePanelId !== null

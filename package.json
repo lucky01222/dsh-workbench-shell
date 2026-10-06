@@ -1,6 +1,6 @@
 {
   "name": "dsh-workbench-shell",
-  "version": "1.11.1",
+  "version": "1.11.2",
   "description": "Independent compact navigation and conversation sidebar for official DeepSeek Harness",
   "type": "module",
   "license": "MIT",
@@ -33,12 +33,13 @@
   },
   "peerDependencies": {
     "@deepseek-ai/dsh": "0.1.7-rc.2",
-    "@deepseek-ai/schemastery": "^3.18.2"
+    "@deepseek-ai/schemastery": "^3.18.2",
+    "@deepseek-ai/cordis": "~4.0.4"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "check": "node --check src/client.mjs && node --check src/index.mjs",
-    "test": "node --test test/navigation.test.mjs",
+    "check": "node --check src/client.mjs && node --check src/index.mjs && node --check src/chat-model-catalog.mjs",
+    "test": "node --test test/navigation.test.mjs test/chat-model-catalog.test.mjs",
     "test:client": "node scripts/test-client.mjs"
   },
   "devDependencies": {
