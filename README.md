@@ -1,4 +1,8 @@
-# Workbench 导航 v1.11.1
+# Workbench 导航 v1.11.2
+
+对话模型菜单和 `/model` 共用聊天用途目录。向量、重排及明确的生图/视频型号从这两个聊天入口筛除，保留文本聊天和支持图片输入的聊天型号；原生推理等级和当前选择保留。模型设置、资料库用途和创作画布继续读取完整 LLM 目录。
+
+此兼容适配绑定官方 Host `0.1.7-rc.2` 的 `sessionController.modelCatalog` 方法。该版本没有输出模态/用途字段，筛选采用明确的专用协议和媒体型号命名，不以 `inputModalities: text` 判断聊天资格。卸载恢复原方法；不覆盖后来安装的适配，也不修改官方发行包。
 
 适用于官方 DeepSeek Harness Web **0.1.7-rc.2**。提供 56px 应用导航、独立对话列表及展开/收起控制；返回对话保留原会话，进入应用保留侧栏宽度偏好。
 
@@ -9,7 +13,7 @@
 需要 Node.js 24。停止目标 Profile 后安装：
 
 ```sh
-dsh plugin --profile web add /path/to/dsh-workbench-shell-1.11.1.tgz --ignore-scripts
+dsh plugin --profile web add /path/to/dsh-workbench-shell-1.11.2.tgz --ignore-scripts
 dsh web
 ```
 

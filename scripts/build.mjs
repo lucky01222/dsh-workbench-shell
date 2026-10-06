@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { build } from 'esbuild'
 await mkdir('dist', { recursive: true })
 await writeFile('dist/index.mjs', await readFile('src/index.mjs', 'utf8'))
+await writeFile('dist/chat-model-catalog.mjs', await readFile('src/chat-model-catalog.mjs', 'utf8'))
 const result = await build({ entryPoints:['src/client.mjs'], outfile:'dist/client-body.js', write:false, bundle:true, platform:'browser', format:'cjs', jsx:'automatic', target:'es2022', external:['react','react/jsx-runtime','react-dom','@deepseek-ai/*'], loader:{'.png':'dataurl','.jpg':'dataurl','.svg':'dataurl'} })
 const js = result.outputFiles.find(file => file.path.endsWith('.js')).text
 const css = await readFile('src/shell.css','utf8')

@@ -75,30 +75,40 @@ async function inputs() {
 }
 
 function createDocument() {
-  const styles = []
-  const attributes = new Map()
+  const styles = [], links = [], watchers = new Set(), pending = new Set()
+  const attributes = new Map(), titleNode = {}
+  let title = 'DeepSeek Harness'
   const document = {
-    styles,
+    styles, links,
+    get title() { return title },
+    set title(value) {
+      title = String(value)
+      for (const observer of watchers) if (observer.target === titleNode) pending.add(observer)
+    },
     body: {
       getAttribute: key => attributes.get(key) ?? null,
       setAttribute: (key, value) => attributes.set(key, String(value)),
       removeAttribute: key => attributes.delete(key), dataset: {},
     },
     documentElement: { dataset: {}, hasAttribute: () => false },
-    head: { append: element => styles.push(element) },
+    head: { append: element => (element.tagName === 'LINK' ? links : styles).push(element) },
     createElement(tag) {
-      assert.equal(tag, 'style', 'Only stylesheet effects are exercised by this DOM fixture')
+      assert.ok(['style', 'link'].includes(tag), 'The fixture exercises stylesheet and browser metadata effects')
       const attrs = new Map()
       return {
-        textContent: '',
+        tagName: tag.toUpperCase(), textContent: '',
         setAttribute: (key, value) => attrs.set(key, String(value)),
         getAttribute: key => attrs.get(key) ?? null,
         removeAttribute: key => attrs.delete(key),
-        remove() { const index = styles.indexOf(this); if (index >= 0) styles.splice(index, 1) },
+        remove() {
+          const elements = this.tagName === 'LINK' ? links : styles
+          const index = elements.indexOf(this); if (index >= 0) elements.splice(index, 1)
+        },
       }
     },
-    querySelector: () => null,
+    querySelector: selector => selector === 'title' ? titleNode : null,
     querySelectorAll(selector) {
+      if (selector === 'link[rel~="icon"]') return links.filter(element => element.getAttribute('rel')?.split(/\s+/).includes('icon'))
       if (selector === 'style:not([data-plugin])') return styles.filter(element => element.getAttribute('data-plugin') === null)
       if (selector === 'style[data-plugin]') return styles.filter(element => element.getAttribute('data-plugin') !== null)
       const match = /^style\[data-plugin=(".*")\]$/.exec(selector)
@@ -106,9 +116,30 @@ function createDocument() {
       return []
     },
     addEventListener() {}, removeEventListener() {},
+    Observer: class {
+      constructor(callback) { this.callback = callback }
+      observe(target) { this.target = target; watchers.add(this) }
+      disconnect() { watchers.delete(this); pending.delete(this) }
+      takeRecords() { pending.delete(this); return [] }
+    },
+    flushMutations() {
+      let turns = 0
+      while (pending.size) {
+        assert.ok(turns++ < 20, 'Title observer settles without a feedback loop')
+        const batch = [...pending]; pending.clear()
+        for (const observer of batch) if (watchers.has(observer)) observer.callback([{ type: 'childList', target: titleNode }])
+      }
+    },
+    get titleObserverCount() { return [...watchers].filter(observer => observer.target === titleNode).length },
+  }
+  for (const mode of ['light', 'dark']) {
+    const element = document.createElement('link')
+    for (const [key, value] of Object.entries({ rel: 'icon', href: `/favicon-${mode}.png`, type: 'image/png', sizes: '32x32', media: `(prefers-color-scheme: ${mode})` })) element.setAttribute(key, value)
+    document.head.append(element)
   }
   return document
 }
+
 
 const syntheticPeer = 'test-style-peer'
 const row = (id, rev = 'r0') => ({ id, rev, url: `/plugins/??${id}/client.js&rev=${rev}` })
@@ -127,7 +158,7 @@ async function createFixture(initialIds, document = createDocument()) {
       __ModuleLoader__: { load: value => { registration = value } },
       matchMedia: () => media, addEventListener() {}, removeEventListener() {},
     },
-    document, MutationObserver: class { observe() {} disconnect() {} },
+    document, MutationObserver: document.Observer,
     console, URL, structuredClone, crypto: webcrypto, clearTimeout, setTimeout, AbortController,
   })
   vm.runInContext(input.official, sandbox, { filename: input.officialPath })
