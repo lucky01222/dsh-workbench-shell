@@ -1,6 +1,6 @@
 {
   "name": "dsh-workbench-shell",
-  "version": "1.11.2",
+  "version": "1.11.3",
   "description": "Independent compact navigation and conversation sidebar for official DeepSeek Harness",
   "type": "module",
   "license": "MIT",
@@ -15,7 +15,12 @@
     "locale",
     "cordis.patch.yml",
     "README.md",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "screenshots.json",
+    "media/*.jpg",
+    "media/SOURCES.md"
   ],
   "dsh": {
     "bundle": {
@@ -32,7 +37,7 @@
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh": "0.1.7-rc.2",
+    "@deepseek-ai/dsh": "0.1.7-rc.2 || 0.2.0-rc.2",
     "@deepseek-ai/schemastery": "^3.18.2",
     "@deepseek-ai/cordis": "~4.0.4"
   },
@@ -45,5 +50,22 @@
   "devDependencies": {
     "esbuild": "0.28.2",
     "react": "18.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucky01222/dsh-workbench-shell.git"
+  },
+  "homepage": "https://github.com/lucky01222/dsh-workbench-shell#readme",
+  "bugs": {
+    "url": "https://github.com/lucky01222/dsh-workbench-shell/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "navigation"
+  ],
+  "engines": {
+    "node": ">=24",
+    "dsh": "0.1.7-rc.2 || 0.2.0-rc.2"
   }
 }
