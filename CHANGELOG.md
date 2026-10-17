@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.11.4 — candidate
+## 1.11.4 — 2026-10-17
 
 - Adapt the navigation rail to macOS Desktop 0.2.0-rc.2, retaining native window controls and a persistent rail when the conversation list closes.
 - Keep app switching independent of the current conversation and native sidebar width.
