@@ -73,3 +73,56 @@ body[data-workbench-page="app"] [data-workbench-frame] { grid-template-columns:v
 body[data-workbench-page="app"] [data-slot="sidebar"] > [class*="_root"] { width:56px!important; grid-template-columns:56px 0px; }
 body[data-workbench-page="app"] [data-slot="sidebar"] :is(button[class*="_newSession"],[class*="_regionArea"]),
 body[data-workbench-page="app"] [data-workbench-frame] > [data-side="sidebar"] { display:none; }
+
+/* macOS Desktop 0.2: keep the rail below the native 48px window-control band.
+   No host state or inline widths are overwritten; removing the marker restores
+   the official zero-width collapse and its original leading seat. */
+body[data-workbench-native="darwin"] [data-sidebar-collapsed][data-workbench-frame] {
+ grid-template-columns:var(--workbench-app-columns)!important;
+ --dsh-frame-leading-clearance:104px;
+}
+body[data-workbench-native="darwin"] [data-slot="sidebar"] > [class*="_root"] {
+ grid-template-rows:112px auto minmax(0,1fr) auto;
+ background:transparent;
+}
+body[data-workbench-native="darwin"] [data-slot="sidebar"] > [class*="_root"]::before { top:48px; }
+body[data-workbench-native="darwin"] [data-slot="sidebar"] [class*="_topStrip"] {
+ position:absolute; inset:0 0 auto; height:48px; margin:0; padding:0 12px 0;
+ background:var(--dsw-specific-sidebar-fill);
+}
+body[data-workbench-native="darwin"] [data-slot="sidebar"] [class*="_topStrip"] [class*="_toggle"] {
+ width:28px; height:28px;
+}
+body[data-workbench-native="darwin"] .wbConversationEntry { top:60px; -webkit-app-region:no-drag; }
+body[data-workbench-native="darwin"] .wbConversationHeading { top:70px; }
+body[data-workbench-native="darwin"] [data-slot="sidebar"] [class*="_footArea"] [class*="_label"] { display:none; }
+body[data-workbench-native="darwin"] [data-slot="sidebar"] [class*="_footArea"] [class*="_trigger"] {
+ width:40px; min-width:40px; height:40px; padding:0; gap:0; justify-content:center;
+}
+body[data-workbench-native="darwin"] [data-sidebar-collapsed] [data-slot="sidebar"] > [class*="_root"] {
+ width:56px!important; grid-template-columns:56px 0px;
+}
+body[data-workbench-native="darwin"] [data-shell-leading],
+body[data-workbench-native="darwin"] [data-sidebar-collapsed] [data-slot="sidebar"] [class*="_topStrip"],
+body[data-workbench-native="darwin"][data-workbench-page="app"] [data-slot="sidebar"] [class*="_topStrip"] { display:none; }
+/* Application panels do not all reserve native window chrome themselves.
+   Give the whole center column one shared inset, including Studio's tab bar. */
+body[data-workbench-native="darwin"][data-workbench-page="app"] [data-workbench-frame] > [class*="_centerCol"] {
+ box-sizing:border-box; padding-top:48px;
+ --dsh-frame-top-clearance:0px; --dsh-frame-leading-clearance:0px;
+}
+body[data-workbench-native="darwin"][data-workbench-page="app"] [data-workbench-frame]::before {
+ content:""; position:absolute; inset:0 0 auto; height:48px;
+ -webkit-app-region:drag; pointer-events:none;
+}
+body[data-workbench-native="darwin"] .wbDesktopChrome {
+ position:absolute; top:0; left:0; width:160px; height:48px;
+ background:var(--dsw-specific-sidebar-fill);
+ -webkit-app-region:drag;
+}
+body[data-workbench-native="darwin"] .wbDesktopChrome .wbConversationToggle {
+ position:absolute; top:11px; left:88px; margin:0; -webkit-app-region:no-drag;
+}
+html[data-fullscreen] body[data-workbench-native="darwin"] .wbDesktopChrome { width:84px; }
+html[data-fullscreen] body[data-workbench-native="darwin"] .wbDesktopChrome .wbConversationToggle { left:12px; }
+html[data-fullscreen] body[data-workbench-native="darwin"] [data-sidebar-collapsed][data-workbench-frame] { --dsh-frame-leading-clearance:28px; }

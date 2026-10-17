@@ -1,6 +1,6 @@
 {
   "name": "dsh-workbench-shell",
-  "version": "1.11.3",
+  "version": "1.11.4",
   "description": "Independent compact navigation and conversation sidebar for official DeepSeek Harness",
   "type": "module",
   "license": "MIT",

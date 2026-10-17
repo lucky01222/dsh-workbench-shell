@@ -4,8 +4,9 @@ import { FishLogo, IconPanelLeftOutlineRegular, Tooltip } from '@deepseek-ai/dsh
 export const inject = ['slots', 'locale', 'layout']
 
 export function apply(ctx) {
-  // Native desktop titlebars have a different, zero-width sidebar contract.
-  if (document.documentElement.dataset.platform === 'darwin' || document.documentElement.hasAttribute('data-windows-titlebar')) return
+  // Windows keeps its native caption-row contract until separately verified.
+  if (document.documentElement.hasAttribute('data-windows-titlebar')) return
+  const nativeMac = document.documentElement.dataset.platform === 'darwin'
   const listeners = new Set()
   let collapsed = true
   const sidebarState = {
@@ -19,7 +20,8 @@ export function apply(ctx) {
   const t = ctx.locale.bind('workbenchShell')
 
   ctx.effect(() => {
-    document.body.setAttribute('data-workbench-shell', '1.11.3')
+    document.body.setAttribute('data-workbench-shell', '1.11.4')
+    if (nativeMac) document.body.setAttribute('data-workbench-native', 'darwin')
     const frames = new Set(), titles = new Map()
     const sync = () => {
       const app = ctx.layout.panelInfo.getSnapshot().activePanelId !== null
@@ -54,6 +56,7 @@ export function apply(ctx) {
       unsubscribe(); observer.disconnect(); listeners.clear()
       document.body.removeAttribute('data-workbench-page')
       document.body.removeAttribute('data-workbench-shell')
+      if (nativeMac) document.body.removeAttribute('data-workbench-native')
       for (const frame of frames) { frame.removeAttribute('data-workbench-frame'); frame.style.removeProperty('--workbench-app-columns') }
       for (const [button, title] of titles) if (button.title === title) button.removeAttribute('title')
     }
@@ -66,16 +69,23 @@ export function apply(ctx) {
       h(Tooltip, { label: t('conversations'), side: 'right' },
         h('button', { className: 'wbConversationEntry', type: 'button', 'aria-label': t('conversations'), 'aria-current': activePanelId === null ? 'page' : undefined, onClick: () => ctx.layout.selectPanel(null) }, renderSlot('workbench.brand.mark', { size: 30 }, { fallback: h(FishLogo, { size: 30 }) }))),
       activePanelId === null && !closed ? h('span', { className: 'wbConversationHeading' }, t('conversations')) : null,
+      nativeMac && (activePanelId !== null || closed) ? h('div', { className: 'wbDesktopChrome', 'data-window-drag': '' },
+        h(ConversationToggle, { fromApp: activePanelId !== null })) : null,
     )
   }
-  function ConversationToggle() {
+  function ConversationToggle({ fromApp = false } = {}) {
     const closed = useSyncExternalStore(sidebarState.subscribe, sidebarState.getSnapshot)
-    const label = t(closed ? 'expand' : 'collapse')
+    const label = t(fromApp || closed ? 'expand' : 'collapse')
     return h(Tooltip, { label }, h('button', {
       type: 'button', className: 'wbConversationToggle', 'aria-label': label,
-      'aria-expanded': !closed, onClick: () => ctx.layout.toggleSidebar(),
+      'aria-expanded': !fromApp && !closed, onClick: () => {
+        if (fromApp) { ctx.layout.selectPanel(null); if (closed) ctx.layout.toggleSidebar() }
+        else ctx.layout.toggleSidebar()
+      },
     }, h(IconPanelLeftOutlineRegular, { size: 16 })))
   }
   ctx.slots.inject('shell.overlay', () => ctx.slots.register({ name: 'shell.overlay', id: 'workbench.conversation-entry', locale: 'workbenchShell', children: { 'workbench.brand.mark': { kind: 'single', scope: 'root' } } }, ConversationEntry))
-  ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({ name: 'conversation.header.leading', priority: -100, locale: 'workbenchShell' }, ConversationToggle))
+  // macOS already has a native top-strip toggle when expanded; our leading
+  // control replaces the hidden native seat only while the rail is alone.
+  if (!nativeMac) ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({ name: 'conversation.header.leading', priority: -100, locale: 'workbenchShell' }, ConversationToggle))
 }

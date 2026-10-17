@@ -3,13 +3,13 @@ import assert from 'node:assert/strict'
 import vm from 'node:vm'
 import {readFileSync} from 'node:fs'
 
-function harness() {
+function harness(platform) {
  const attributes=new Map(), styles=new Map(), callbacks=new Set(), registrations=new Map(), cleanups=[],eventListeners=new Set()
  const frameAttrs=new Map()
  const frame={style:{gridTemplateColumns:'337px minmax(320px, 1fr) minmax(0px, 410px)',getPropertyValue:k=>styles.get(k)||'',setProperty:(k,v)=>styles.set(k,v),removeProperty:k=>styles.delete(k)},hasAttribute:k=>frameAttrs.has(k),setAttribute:(k,v)=>frameAttrs.set(k,v),removeAttribute:k=>frameAttrs.delete(k)}
  let observer,plugin,selected={activePanelId:null},toggles=0
  const body={append(){},dataset:new Proxy({}, {get:(_,k)=>attributes.get(k),set:(_,k,v)=>{attributes.set(k,v);return true}}),getAttribute:k=>attributes.get(k)??null,setAttribute:(k,v)=>attributes.set(k,v),removeAttribute:k=>attributes.delete(k)}
- const document={addEventListener:(_name,fn)=>eventListeners.add(fn),removeEventListener:(_name,fn)=>eventListeners.delete(fn),createElementNS:()=>({style:{},setAttribute(){},append(){},remove(){}}),documentElement:{dataset:{},hasAttribute:()=>false},body,head:{append:()=>{}},createElement:()=>({setAttribute(){},remove(){}}),querySelector:()=>({closest:()=>frame}),querySelectorAll:()=>[]}
+ const document={addEventListener:(_name,fn)=>eventListeners.add(fn),removeEventListener:(_name,fn)=>eventListeners.delete(fn),createElementNS:()=>({style:{},setAttribute(){},append(){},remove(){}}),documentElement:{dataset:platform==='darwin'?{platform:'darwin'}:{},hasAttribute:key=>platform==='win32'&&key==='data-windows-titlebar'},body,head:{append:()=>{}},createElement:()=>({setAttribute(){},remove(){}}),querySelector:()=>({closest:()=>frame}),querySelectorAll:()=>[]}
  const react={createElement:(type,props,...children)=>({type,props,children}),Fragment:'fragment',useSyncExternalStore:(_,get)=>get()}
  const sandbox={document,MutationObserver:class{constructor(fn){observer=fn}observe(){}disconnect(){observer=null}},window:{matchMedia:()=>({matches:false,addEventListener(){},removeEventListener(){}}),__ModuleLoader__:{load:entry=>{plugin=entry.factory(id=>id==='react'?react:{FishLogo:'fish',IconPanelLeftOutlineRegular:'panel',Tooltip:'tooltip'})}}}}
  vm.runInNewContext(readFileSync('dist/client.js','utf8'),sandbox)
@@ -53,4 +53,43 @@ test('navigation works without theme and renders the native optional-brand fallb
  assert.equal(calls[0].name,'workbench.brand.mark');assert.equal(calls[0].owner.size,30)
  assert.equal(rail.children[0].children[0].children[0].type,'fish')
  assert.equal(h.attributes.has('data-dsh-theme'),false);h.dispose()
+})
+
+
+test('macOS retains a projected rail when the official sidebar closes to zero and cleans up',()=>{
+ const h=harness('darwin')
+ assert.equal(h.attributes.get('data-workbench-native'),'darwin')
+ assert.equal(h.registrations.has('conversation.header.leading'),false,'native chrome already supplies the expanded toggle')
+ h.frame.setAttribute('data-sidebar-collapsed','true')
+ h.frame.style.gridTemplateColumns='0px minmax(0px, 1fr) minmax(0px, 410px)'
+ h.observers()
+ assert.equal(h.styles.get('--workbench-app-columns'),'56px minmax(0px, 1fr) minmax(0px, 410px)')
+ assert.equal(h.frame.style.gridTemplateColumns,'0px minmax(0px, 1fr) minmax(0px, 410px)')
+ const rail=h.registrations.get('shell.overlay')({renderSlot:(_name,_owner,options)=>options.fallback})
+ assert.equal(rail.children[1],null,'collapsed conversations have no inaccessible title in the hidden list')
+ const control=rail.children[2].children[0]
+ control.type(control.props).children[0].props.onClick()
+ assert.equal(h.toggles,1)
+ h.dispose();assert.equal(h.attributes.has('data-workbench-native'),false)
+ assert.equal(h.styles.size,0);assert.equal(h.callbacks.size,0)
+})
+test('macOS application header returns to the existing conversation without toggling its expanded width',()=>{
+ const h=harness('darwin');h.ctx.layout.selectPanel('workbench-agent-studio')
+ const rail=h.registrations.get('shell.overlay')({renderSlot:(_name,_owner,options)=>options.fallback})
+ const control=rail.children[2].children[0]
+ control.type(control.props).children[0].props.onClick()
+ assert.equal(h.ctx.layout.panelInfo.getSnapshot().activePanelId,null)
+ assert.equal(h.toggles,0)
+ assert.equal(h.frame.style.gridTemplateColumns,'337px minmax(320px, 1fr) minmax(0px, 410px)')
+ h.dispose()
+})
+test('macOS application header also opens a previously collapsed conversation list',()=>{
+ const h=harness('darwin');h.frame.setAttribute('data-sidebar-collapsed','true');h.observers();h.ctx.layout.selectPanel('plugins')
+ const rail=h.registrations.get('shell.overlay')({renderSlot:(_name,_owner,options)=>options.fallback})
+ const control=rail.children[2].children[0];control.type(control.props).children[0].props.onClick()
+ assert.equal(h.ctx.layout.panelInfo.getSnapshot().activePanelId,null);assert.equal(h.toggles,1)
+ h.dispose()
+})
+test('Windows keeps the native caption-row opt-out until it is separately verified',()=>{
+ const h=harness('win32');assert.equal(h.registrations.size,0);assert.equal(h.callbacks.size,0);assert.equal(h.attributes.has('data-workbench-native'),false);h.dispose()
 })
