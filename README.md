@@ -2,7 +2,7 @@
 
 为 DeepSeek Harness Web 带来紧凑的应用导航，让应用切换与对话列表各有位置。
 
-**当前版本 1.11.3** · 官方 Harness **0.1.7-rc.2 / 0.2.0-rc.2** · Node.js **24**
+**当前版本 1.11.4** · 官方 Harness **0.1.7-rc.2 / 0.2.0-rc.2** · Node.js **24**
 
 [看界面](#应用与对话各有位置) · [快速安装](#快速安装) · [搭配主题](#与主题搭配) · [常见问题](#常见问题与兼容性) · [npm](https://www.npmjs.com/package/dsh-workbench-shell)
 
@@ -37,7 +37,7 @@
 需要已安装的官方 `@deepseek-ai/dsh@0.1.7-rc.2` 或 `@deepseek-ai/dsh@0.2.0-rc.2` 和 **Node.js 24**。先停止目标 Web Profile，再在同一个环境中安装并启动：
 
 ```sh
-dsh plugin --profile web add https://github.com/lucky01222/dsh-workbench-shell/releases/download/v1.11.3/dsh-workbench-shell-1.11.3.tgz
+dsh plugin --profile web add https://github.com/lucky01222/dsh-workbench-shell/releases/download/v1.11.4/dsh-workbench-shell-1.11.4.tgz
 dsh web
 ```
 
@@ -56,14 +56,14 @@ dsh web
 
 ```sh
 export DSH_HOME="/绝对路径/你的-dsh-数据目录"
-dsh plugin --profile web add https://github.com/lucky01222/dsh-workbench-shell/releases/download/v1.11.3/dsh-workbench-shell-1.11.3.tgz
+dsh plugin --profile web add https://github.com/lucky01222/dsh-workbench-shell/releases/download/v1.11.4/dsh-workbench-shell-1.11.4.tgz
 dsh web
 ```
 
 已有本地构建产物时，也可以安装 `.tgz` 文件：
 
 ```sh
-dsh plugin --profile web add /绝对路径/dsh-workbench-shell-1.11.3.tgz
+dsh plugin --profile web add /绝对路径/dsh-workbench-shell-1.11.4.tgz
 ```
 
 `DSH_HOME` 决定安装所用的数据目录；`--profile web` 指定 Web Profile。它们应与日常启动使用的设置一致。
@@ -85,7 +85,7 @@ dsh plugin --profile web add /绝对路径/dsh-workbench-shell-1.11.3.tgz
 
 ### 支持哪个版本？
 
-当前适配官方 **DeepSeek Harness Web 0.1.7-rc.2 / 0.2.0-rc.2**。宿主升级后需要重新核对布局和模型目录的适配；原生桌面标题栏不应用此 Web 导航。
+当前适配官方 **DeepSeek Harness Web 0.1.7-rc.2 / 0.2.0-rc.2**。另适配官方 **macOS Apple Silicon 桌面版 0.2.0-rc.2**：保留 56px 应用栏，顶部避开原生窗口按钮，对话列表独立展开。Windows 原生标题栏仍保留官方导航。宿主升级后需重新核对布局和模型目录适配。
 
 ### 安装后为什么没有人物或其他应用？
 
@@ -156,6 +156,10 @@ README 截图的环境与内容说明见 [展示素材记录](media/SOURCES.md)�
 
 本版仅声明 0.1.7-rc.2 和 0.2.0-rc.2；alpha 和其他版本未声明支持。上方旧版本截图保留其原版本说明。安装后重启目标 Web Profile。
 
-直接下载 [dsh-workbench-shell-1.11.3.tgz](https://github.com/lucky01222/dsh-workbench-shell/releases/download/v1.11.3/dsh-workbench-shell-1.11.3.tgz)，或使用 npm 包名安装。
+直接下载 [dsh-workbench-shell-1.11.4.tgz](https://github.com/lucky01222/dsh-workbench-shell/releases/download/v1.11.4/dsh-workbench-shell-1.11.4.tgz)，或使用 npm 包名安装。
 
-以上安装命令固定到本次 GitHub Release；若使用 npm，请先确认包页面已有 `1.11.3`，再安装 `dsh-workbench-shell@1.11.3`。
+以上安装命令固定到本次 GitHub Release；若使用 npm，请先确认包页面已有 `1.11.4`，再安装 `dsh-workbench-shell@1.11.4`。
+
+### macOS 桌面适配 1.11.4
+
+桌面窗口顶部保留原生控制区和拖动区域；收起对话列表仍显示应用栏。切换到工作室等应用时，应用栏保持可用，当前会话和原生侧栏宽度不因应用切换而重置。使用桌面端自带的 dsh 安装到 `--profile desktop`；本页下载链接提供已验收的 1.11.4 安装包。
